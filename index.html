@@ -34,29 +34,14 @@
         textColor: "#f8fafc",
         avatarAnimation: "Yes",
 
-        // ONLY your 8 games (placeIds from the links you gave)
+        // ONLY these 8 games
         manualGames: [106988495261000, 77942507005261, 95744979554149, 104877476991790, 14044594226, 82126039807655, 101246660655753, 108311894104237],
 
-        // Your 3 communities (will appear as extra cards)
-        extraProjects: [
-            {
-                name: "Boden Interactive",
-                desc: "Official Group - Join for updates & events!",
-                image: "https://thumbnails.roproxy.com/v1/groups/icons?groupIds=426353491&size=420x420&format=Png",
-                link: "https://www.roblox.com/communities/426353491/Boden-Interactive#!/about"
-            },
-            {
-                name: "Woven Productions",
-                desc: "Official Group - Join for updates & events!",
-                image: "https://thumbnails.roproxy.com/v1/groups/icons?groupIds=7457551&size=420x420&format=Png",
-                link: "https://www.roblox.com/communities/7457551/Woven-Productions#!/about"
-            },
-            {
-                name: "StarWoven Productions",
-                desc: "Official Group - Join for updates & events!",
-                image: "https://thumbnails.roproxy.com/v1/groups/icons?groupIds=35252165&size=420x420&format=Png",
-                link: "https://www.roblox.com/communities/35252165/StarWoven-Productions#!/about"
-            }
+        // Your 3 groups
+        groups: [
+            { name: "Boden Interactive", desc: "Official Group - Join for updates & events!", id: "426353491", link: "https://www.roblox.com/communities/426353491/Boden-Interactive#!/about" },
+            { name: "Woven Productions", desc: "Official Group - Join for updates & events!", id: "7457551", link: "https://www.roblox.com/communities/7457551/Woven-Productions#!/about" },
+            { name: "StarWoven Productions", desc: "Official Group - Join for updates & events!", id: "35252165", link: "https://www.roblox.com/communities/35252165/StarWoven-Productions#!/about" }
         ],
 
         links: {
@@ -74,7 +59,7 @@
 
 <div class="pt-32 pb-20 px-6 max-w-6xl mx-auto">
 
-    <!-- AVATAR (exact same as template) -->
+    <!-- AVATAR (exact same as the template you sent) -->
     <div class="text-center mb-12">
         <div id="avatar-container" class="relative inline-block avatar-float">
             <img id="avatar-img" class="w-64 h-64 rounded-full border-8 shadow-2xl" style="border-color: var(--accent);">
@@ -93,13 +78,22 @@
         </div>
     </div>
 
-    <!-- MY WORK (games + communities) -->
+    <!-- MY GAMES (first) -->
+    <section class="mb-16">
+        <div class="flex items-center gap-3 mb-8">
+            <div class="h-8 w-2" style="background:var(--accent)"></div>
+            <h2 class="text-4xl font-black italic uppercase tracking-tighter">MY GAMES</h2>
+        </div>
+        <div id="games-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
+    </section>
+
+    <!-- MY COMMUNITIES -->
     <section>
         <div class="flex items-center gap-3 mb-8">
             <div class="h-8 w-2" style="background:var(--accent)"></div>
-            <h2 class="text-4xl font-black italic uppercase tracking-tighter">My Work</h2>
+            <h2 class="text-4xl font-black italic uppercase tracking-tighter">MY COMMUNITIES</h2>
         </div>
-        <div id="work-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
+        <div id="groups-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
     </section>
 
 </div>
@@ -118,28 +112,15 @@
             const res = await fetch(`https://api.un6107617.dev/portfolio/${cfg.userId}`);
             const data = await res.json();
 
-            // Avatar (exact same as original template)
+            // Avatar (exact same as your template)
             document.getElementById('avatar-img').src = data.user.avatar;
 
-            const grid = document.getElementById('work-grid');
-
-            // 1. Communities (extraProjects)
-            let html = cfg.extraProjects.map(p => `
-                <div class="glass rounded-3xl overflow-hidden flex flex-col group">
-                    <div class="img-container"><img src="${p.image}"></div>
-                    <div class="p-8">
-                        <h3 class="text-2xl font-black mb-2">${p.name}</h3>
-                        <p class="opacity-70 mb-6">${p.desc}</p>
-                        <a href="${p.link}" target="_blank" class="font-black text-xs uppercase block text-center" style="color:var(--accent)">JOIN GROUP →</a>
-                    </div>
-                </div>`).join('');
-
-            // 2. Filter to ONLY your 8 games
+            // Filter to ONLY your 8 games
             const allowed = new Set(cfg.manualGames);
             const filteredGames = data.games.filter(g => allowed.has(Number(g.placeId)));
 
-            // 3. Your games
-            html += filteredGames.map(g => `
+            // Render MY GAMES
+            let gamesHTML = filteredGames.map(g => `
                 <div class="glass rounded-3xl overflow-hidden flex flex-col group">
                     <div class="img-container"><img src="${g.thumbnail}"></div>
                     <div class="p-8">
@@ -152,18 +133,31 @@
                         <a href="https://www.roblox.com/games/${g.placeId}" target="_blank" class="font-black text-xs uppercase block text-center" style="color:var(--accent)">PLAY →</a>
                     </div>
                 </div>`).join('');
+            document.getElementById('games-grid').innerHTML = gamesHTML;
 
-            grid.innerHTML = html;
-
-            // Total stats from your 8 games only
+            // Total stats
             const totalPlaying = filteredGames.reduce((sum, g) => sum + (g.playing || 0), 0);
             const totalVisits = filteredGames.reduce((sum, g) => sum + (g.visits || 0), 0);
             document.getElementById('total-playing').innerText = totalPlaying;
             document.getElementById('total-visits').innerText = totalVisits;
 
+            // Render MY COMMUNITIES (using reliable thumbnail method)
+            const groupsHTML = cfg.groups.map(g => `
+                <div class="glass rounded-3xl overflow-hidden flex flex-col group">
+                    <div class="img-container">
+                        <img src="https://thumbnails.roproxy.com/v1/groups/icons?groupIds=${g.id}&size=420x420&format=Png" alt="${g.name}">
+                    </div>
+                    <div class="p-8">
+                        <h3 class="text-2xl font-black mb-2">${g.name}</h3>
+                        <p class="opacity-70 mb-6">${g.desc}</p>
+                        <a href="${g.link}" target="_blank" class="font-black text-xs uppercase block text-center" style="color:var(--accent)">JOIN GROUP →</a>
+                    </div>
+                </div>`).join('');
+            document.getElementById('groups-grid').innerHTML = groupsHTML;
+
         } catch (e) {
             console.error(e);
-            document.getElementById('work-grid').innerHTML = `<p class="text-red-400 text-center py-12">Could not load — please refresh.</p>`;
+            document.getElementById('games-grid').innerHTML = `<p class="text-red-400 text-center py-12">Could not load games — please refresh the page.</p>`;
         }
     }
 
