@@ -32,7 +32,7 @@
         backgroundColor: "#0b1120",
         textColor: "#f8fafc",
         avatarAnimation: "Yes",
-        // Only fetch and display these specific IDs (can be Place IDs or Universe IDs)
+        // Your specific 8 Game Place IDs
         manualGames: [106988495261000, 77942507005261, 95744979554149, 104877476991790, 14044594226, 82126039807655, 101246660655753, 108311894104237],
         // Your 3 groups
         groups: [
@@ -93,45 +93,50 @@
         document.getElementById('nav-name').innerText = cfg.name;
 
         try {
-            // 1. Fetch User Avatar via standard Proxy
+            // 1. Fetch User Avatar
             const avatarRes = await fetch(`https://thumbnails.roproxy.com/v1/users/avatar-headshot?userIds=${cfg.userId}&size=420x420&format=Png&isCircular=false`);
             const avatarData = await avatarRes.json();
             if (avatarData.data && avatarData.data.length > 0) {
                 document.getElementById('avatar-img').src = avatarData.data[0].imageUrl;
             }
 
-            // 2. Fetch User & Group Games to find the matches
-            let allGames = [];
-            
-            // Get personal games
-            const userGamesRes = await fetch(`https://games.roproxy.com/v2/users/${cfg.userId}/games?limit=50`);
-            const userGamesData = await userGamesRes.json();
-            if (userGamesData.data) allGames.push(...userGamesData.data);
+            // 2. Convert Place IDs to Universe IDs using the unauthenticated API
+            const universeIds = [];
+            const universePromises = cfg.manualGames.map(async (placeId) => {
+                try {
+                    const res = await fetch(`https://apis.roproxy.com/universes/v1/places/${placeId}/universe`);
+                    if(res.ok) {
+                        const data = await res.json();
+                        if(data.universeId) return data.universeId;
+                    }
+                } catch(e) { console.warn("Could not fetch universe for place", placeId); }
+                return null;
+            });
 
-            // Get group games
-            for (const group of cfg.groups) {
-                const groupGamesRes = await fetch(`https://games.roproxy.com/v2/groups/${group.id}/games?limit=50`);
-                const groupGamesData = await groupGamesRes.json();
-                if (groupGamesData.data) allGames.push(...groupGamesData.data);
-            }
+            // Wait for all conversions to finish, then filter out any failed ones
+            const resolvedUniverses = await Promise.all(universePromises);
+            resolvedUniverses.forEach(id => { if(id) universeIds.push(id); });
 
-            // 3. Filter down to only the games in the manual array
-            const allowed = new Set(cfg.manualGames);
-            const filteredGames = allGames.filter(g => allowed.has(Number(g.rootPlaceId)) || allowed.has(Number(g.id)));
+            // 3. Fetch Game Details and Thumbnails
+            if (universeIds.length > 0) {
+                const uniString = universeIds.join(',');
 
-            // 4. Fetch Game Thumbnails and Render
-            if (filteredGames.length > 0) {
-                const universeIds = filteredGames.map(g => g.id).join(',');
-                const thumbRes = await fetch(`https://thumbnails.roproxy.com/v1/games/icons?universeIds=${universeIds}&returnPolicy=PlaceHolder&size=512x512&format=Png&isCircular=false`);
+                // Fetch Game Stats (Name, CCU, Visits, Desc)
+                const detailsRes = await fetch(`https://games.roproxy.com/v1/games?universeIds=${uniString}`);
+                const detailsData = await detailsRes.json();
+                const gamesList = detailsData.data || [];
+
+                // Fetch Thumbnails
+                const thumbRes = await fetch(`https://thumbnails.roproxy.com/v1/games/icons?universeIds=${uniString}&returnPolicy=PlaceHolder&size=512x512&format=Png&isCircular=false`);
                 const thumbData = await thumbRes.json();
                 
-                // Map the images to their Universe ID so they sync up properly
                 const thumbMap = {};
                 if (thumbData.data) {
                     thumbData.data.forEach(t => thumbMap[t.targetId] = t.imageUrl);
                 }
 
-                let gamesHTML = filteredGames.map(g => `
+                // Render HTML
+                let gamesHTML = gamesList.map(g => `
                     <div class="glass rounded-3xl overflow-hidden flex flex-col group">
                         <div class="img-container"><img src="${thumbMap[g.id] || ''}"></div>
                         <div class="p-8 flex flex-col flex-grow">
@@ -147,15 +152,15 @@
                 document.getElementById('games-grid').innerHTML = gamesHTML;
 
                 // Update Total Stats
-                const totalPlaying = filteredGames.reduce((sum, g) => sum + (g.playing || 0), 0);
-                const totalVisits = filteredGames.reduce((sum, g) => sum + (g.visits || 0), 0);
+                const totalPlaying = gamesList.reduce((sum, g) => sum + (g.playing || 0), 0);
+                const totalVisits = gamesList.reduce((sum, g) => sum + (g.visits || 0), 0);
                 document.getElementById('total-playing').innerText = totalPlaying.toLocaleString();
                 document.getElementById('total-visits').innerText = totalVisits.toLocaleString();
             } else {
                 document.getElementById('games-grid').innerHTML = `<p class="col-span-2 text-center text-white/50 py-12">No games found. Double-check your manualGames IDs.</p>`;
             }
 
-            // 5. Fetch Group Icons by extracting JSON properly
+            // 4. Fetch Group Icons
             const groupIds = cfg.groups.map(g => g.id).join(',');
             const groupThumbRes = await fetch(`https://thumbnails.roproxy.com/v1/groups/icons?groupIds=${groupIds}&size=420x420&format=Png`);
             const groupThumbData = await groupThumbRes.json();
