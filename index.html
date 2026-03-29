@@ -172,10 +172,16 @@
 
                 const uniString = universeIds.join(',');
 
-                // Fetch game details (name, description, playing, visits, rootPlaceId)
+                // Fetch game details
                 const detailsRes = await fetch(`https://games.roproxy.com/v1/games?universeIds=${uniString}`);
                 const detailsData = await detailsRes.json();
-                const gamesList = detailsData.data || [];
+                let gamesList = detailsData.data || [];
+
+                // === NEW: Sort by highest CCU first, then by highest visits on tie ===
+                gamesList.sort((a, b) => {
+                    if (b.playing !== a.playing) return b.playing - a.playing;
+                    return b.visits - a.visits;
+                });
 
                 // Fetch game thumbnails
                 const thumbRes = await fetch(`https://thumbnails.roproxy.com/v1/games/icons?universeIds=${uniString}&returnPolicy=PlaceHolder&size=512x512&format=Png&isCircular=false`);
@@ -185,7 +191,7 @@
                     thumbData.data.forEach(t => { thumbMap[t.targetId] = t.imageUrl; });
                 }
 
-                // Render rich game cards (cool glass + hover effects)
+                // Render rich game cards
                 let gamesHTML = gamesList.map(g => `
                     <div class="game-card glass rounded-3xl overflow-hidden flex flex-col h-full">
                         <div class="img-container">
@@ -222,7 +228,7 @@
                 gamesGrid.innerHTML = `<p class="col-span-full text-red-400 text-center py-12">Could not connect to Roblox API. Please try again later.</p>`;
             }
 
-            // 3. Load Groups with icons
+            // 3. Load Groups with icons + member counts
             const groupsGrid = document.getElementById('groups-grid');
             try {
                 const groupIds = cfg.groups.map(g => g.id).join(',');
@@ -233,7 +239,19 @@
                     groupThumbData.data.forEach(t => { groupThumbMap[t.targetId] = t.imageUrl; });
                 }
 
-                const groupsHTML = cfg.groups.map(g => `
+                // === NEW: Fetch member count for each group ===
+                const enrichedGroups = await Promise.all(cfg.groups.map(async (g) => {
+                    try {
+                        const res = await fetch(`https://groups.roproxy.com/v1/groups/${g.id}`);
+                        if (res.ok) {
+                            const data = await res.json();
+                            return { ...g, memberCount: data.memberCount || 0 };
+                        }
+                    } catch (e) {}
+                    return { ...g, memberCount: 0 };
+                }));
+
+                const groupsHTML = enrichedGroups.map(g => `
                     <a href="${g.link}" target="_blank" class="game-card glass rounded-3xl overflow-hidden flex flex-col h-full group">
                         <div class="img-container">
                             <img src="${groupThumbMap[g.id] || ''}" alt="${g.name}">
@@ -241,6 +259,9 @@
                         <div class="p-6 flex flex-col flex-1">
                             <h3 class="text-2xl font-bold heading-font tracking-tighter mb-3">${g.name}</h3>
                             <p class="desc-truncate text-gray-300 flex-1 text-sm mb-6">${g.desc}</p>
+                            <div class="flex justify-between text-xs mb-6 font-medium">
+                                <div>MEMBERS <span class="font-black text-purple-400">${g.memberCount.toLocaleString()}</span></div>
+                            </div>
                             <div class="mt-auto inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold uppercase tracking-widest py-3 rounded-2xl transition">
                                 JOIN STUDIO →
                             </div>
