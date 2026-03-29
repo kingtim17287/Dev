@@ -232,7 +232,7 @@
 
             // 1. Load Avatar
             try {
-                const avRes = await fetch(`https://thumbnails.roproxy.com/v1/users/avatar-headshot?userIds=${cfg.userId}&size=420x420&format=Png&isCircular=false`);
+                const avRes = await fetch(`https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${cfg.userId}&size=420x420&format=Png&isCircular=false`);
                 const avData = await avRes.json();
                 if (avData.data && avData.data.length > 0) {
                     document.getElementById('avatar-img').src = avData.data[0].imageUrl;
@@ -245,7 +245,7 @@
                 try {
                     const universePromises = placeIds.map(async (placeId) => {
                         try {
-                            const res = await fetch(`https://apis.roproxy.com/universes/v1/places/${placeId}/universe`);
+                            const res = await fetch(`https://apis.roblox.com/universes/v1/places/${placeId}/universe`);
                             if (res.ok) {
                                 const data = await res.json();
                                 return data.universeId;
@@ -263,7 +263,7 @@
 
                     const uniString = universeIds.join(',');
 
-                    const detailsRes = await fetch(`https://games.roproxy.com/v1/games?universeIds=${uniString}`);
+                    const detailsRes = await fetch(`https://games.roblox.com/v1/games?universeIds=${uniString}`);
                     const detailsData = await detailsRes.json();
                     let gamesList = detailsData.data || [];
 
@@ -272,7 +272,7 @@
                         return b.visits - a.visits;
                     });
 
-                    const thumbRes = await fetch(`https://thumbnails.roproxy.com/v1/games/icons?universeIds=${uniString}&returnPolicy=PlaceHolder&size=512x512&format=Png&isCircular=false`);
+                    const thumbRes = await fetch(`https://thumbnails.roblox.com/v1/games/icons?universeIds=${uniString}&returnPolicy=PlaceHolder&size=512x512&format=Png&isCircular=false`);
                     const thumbData = await thumbRes.json();
                     const thumbMap = {};
                     if (thumbData.data) {
@@ -319,12 +319,12 @@
             try {
                 const uniString = (await Promise.all(cfg.manualGames.map(async p => {
                     try {
-                        const r = await fetch(`https://apis.roproxy.com/universes/v1/places/${p}/universe`);
+                        const r = await fetch(`https://apis.roblox.com/universes/v1/places/${p}/universe`);
                         return r.ok ? (await r.json()).universeId : null;
                     } catch { return null; }
                 }))).filter(Boolean).join(',');
                 if (uniString) {
-                    const detailsRes = await fetch(`https://games.roproxy.com/v1/games?universeIds=${uniString}`);
+                    const detailsRes = await fetch(`https://games.roblox.com/v1/games?universeIds=${uniString}`);
                     const data = await detailsRes.json();
                     const list = data.data || [];
                     const totalPlaying = list.reduce((sum, g) => sum + (g.playing || 0), 0);
@@ -360,7 +360,7 @@
             const groupsGrid = document.getElementById('groups-grid');
             try {
                 const groupIds = cfg.groups.map(g => g.id).join(',');
-                const groupThumbRes = await fetch(`https://thumbnails.roproxy.com/v1/groups/icons?groupIds=${groupIds}&size=420x420&format=Png`);
+                const groupThumbRes = await fetch(`https://thumbnails.roblox.com/v1/groups/icons?groupIds=${groupIds}&size=420x420&format=Png`);
                 const groupThumbData = await groupThumbRes.json();
                 const groupThumbMap = {};
                 if (groupThumbData.data) {
@@ -369,7 +369,7 @@
 
                 const enrichedGroups = await Promise.all(cfg.groups.map(async (g) => {
                     try {
-                        const res = await fetch(`https://groups.roproxy.com/v1/groups/${g.id}`);
+                        const res = await fetch(`https://groups.roblox.com/v1/groups/${g.id}`);
                         if (res.ok) {
                             const data = await res.json();
                             return { ...g, memberCount: data.memberCount || 0 };
