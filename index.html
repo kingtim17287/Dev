@@ -1,101 +1,23 @@
-<?php
-// ==========================================
-//            PORTFOLIO CONFIGURATION - YOURS
-// ==========================================
-
-// 1. BASIC INFO
-$name         = "KingTim17287";       
-$roblox_id    = "3808496324";         
-$for_hire     = "No";                 
-$title        = "Roblox Developer";   
-$title_color  = "blue-500";           
-$bio          = ""; // not used anymore
-$bio_color    = "white";              
-
-// 2. THEME SETTINGS
-$theme_color  = "blue";                
-$accent_hex   = "#3b82f6";             
-$avatar_animation = "Yes"; 
-
-// 3. ADVANCED COLORS (HEX Codes)
-$bg_color     = "#0b1120";             
-$text_color   = "#f8fafc";             
-$glass_bg     = "rgba(30, 41, 59, 0.5)"; 
-$card_border  = "rgba(255, 255, 255, 0.08)"; 
-
-// 4. SEO & META SETTINGS
-$seo_title       = "KingTim17287 | Roblox Game Developer";
-$seo_description = "My Roblox games: Jetpack over LAVA, Dead Meals, 99 Nights Zombie Tower Defense and more!";
-$seo_keywords    = "Roblox, Developer, Portfolio";
-$seo_image       = "";
-$seo_favicon     = "";
-
-// 7. YOUR 8 GAMES ONLY (placeIds from the links you gave)
-$manualGameIds = [106988495261000, 77942507005261, 95744979554149, 104877476991790, 14044594226, 82126039807655, 101246660655753, 108311894104237];
-
-// 8. YOUR 3 COMMUNITIES
-$communities = [
-    [
-        "name" => "Boden Interactive",
-        "desc" => "Official Group - Join for updates & events!",
-        "id"   => "426353491",
-        "link" => "https://www.roblox.com/communities/426353491/Boden-Interactive#!/about"
-    ],
-    [
-        "name" => "Woven Productions",
-        "desc" => "Official Group - Join for updates & events!",
-        "id"   => "7457551",
-        "link" => "https://www.roblox.com/communities/7457551/Woven-Productions#!/about"
-    ],
-    [
-        "name" => "StarWoven Productions",
-        "desc" => "Official Group - Join for updates & events!",
-        "id"   => "35252165",
-        "link" => "https://www.roblox.com/communities/35252165/StarWoven-Productions#!/about"
-    ]
-];
-
-// ==========================================
-//             CORE LOGIC (same as template)
-// ==========================================
-function fetchPortfolioData($userId) {
-    $url = "https://api.un6107617.dev/portfolio/" . $userId;
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    $result = curl_exec($ch);
-    curl_close($ch);
-    return json_decode($result, true);
-}
-
-$api_data = fetchPortfolioData($roblox_id);
-$avatar_url = $api_data['user']['avatar'] ?? "";
-$my_games = $api_data['games'] ?? [];
-
-// Filter to ONLY your 8 games
-$filtered_games = array_filter($my_games, function($game) use ($manualGameIds) {
-    return in_array((int)$game['placeId'], $manualGameIds);
-});
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $seo_title; ?></title>
-    <meta name="description" content="<?php echo $seo_description; ?>">
+    <title>KingTim17287 | Roblox Game Developer</title>
+    <meta name="description" id="meta-desc" content="My Roblox games: Jetpack over LAVA, Dead Meals, 99 Nights Zombie Tower Defense and more!">
+    <link id="favicon" rel="icon" type="image/png" href="">
+    <meta property="og:title" id="og-title" content="KingTim17287 | Roblox Game Developer">
+    <meta property="og:description" id="og-desc" content="My Roblox games: Jetpack over LAVA, Dead Meals, 99 Nights Zombie Tower Defense and more!">
+    <meta property="og:image" id="og-img" content="">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --accent: <?php echo $accent_hex; ?>; }
-        body { background-color: <?php echo $bg_color; ?>; color: <?php echo $text_color; ?>; scroll-behavior: smooth; }
-        .glass { background: <?php echo $glass_bg; ?>; backdrop-filter: blur(12px); border: 1px solid <?php echo $card_border; ?>; }
-        .img-container { aspect-ratio: 16/9; overflow: hidden; background: #111; }
+        :root { --accent: #3b82f6; --bg: #0b1120; --text: #f8fafc; }
+        body { background-color: var(--bg); color: var(--text); scroll-behavior: smooth; overflow-x: hidden; }
+        .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
+        .img-container { position: relative; width: 100%; aspect-ratio: 16/9; overflow: hidden; background: rgba(0,0,0,0.2); }
         .img-container img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
         .group:hover .img-container img { transform: scale(1.05); }
+        .desc-truncate { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
         .stat-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); }
         .avatar-float { animation: float 4s ease-in-out infinite; }
         @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
@@ -103,27 +25,52 @@ $filtered_games = array_filter($my_games, function($game) use ($manualGameIds) {
 </head>
 <body class="antialiased tracking-tight">
 
-<nav class="fixed top-0 w-full z-50 py-5 px-6 glass">
+<script>
+    const portfolioConfig = {
+        userId: "3808496324",
+        name: "KingTim17287",
+        accentHex: "#3b82f6",
+        backgroundColor: "#0b1120",
+        textColor: "#f8fafc",
+        avatarAnimation: "Yes",
+        // ONLY these 8 games
+        manualGames: [106988495261000, 77942507005261, 95744979554149, 104877476991790, 14044594226, 82126039807655, 101246660655753, 108311894104237],
+        // Your 3 groups
+        groups: [
+            { name: "Boden Interactive", desc: "Official Group - Join for updates & events!", id: "426353491", link: "https://www.roblox.com/communities/426353491/Boden-Interactive#!/about" },
+            { name: "Woven Productions", desc: "Official Group - Join for updates & events!", id: "7457551", link: "https://www.roblox.com/communities/7457551/Woven-Productions#!/about" },
+            { name: "StarWoven Productions", desc: "Official Group - Join for updates & events!", id: "35252165", link: "https://www.roblox.com/communities/35252165/StarWoven-Productions#!/about" }
+        ],
+        links: {
+            "Roblox": "https://www.roblox.com/users/3808496324/profile",
+            "GitHub": "https://github.com/kingtim17287"
+        }
+    };
+</script>
+
+<nav class="fixed top-0 w-full z-50 py-3 md:py-5 px-4 md:px-6 glass">
     <div class="max-w-6xl mx-auto flex justify-between items-center">
-        <span class="font-black text-3xl italic uppercase tracking-tighter" style="color:var(--accent)"><?php echo $name; ?></span>
+        <span id="nav-name" class="font-black text-2xl italic uppercase tracking-tighter" style="color: var(--accent);">KINGTIM17287</span>
     </div>
 </nav>
 
 <div class="pt-32 pb-20 px-6 max-w-6xl mx-auto">
 
-    <!-- AVATAR (same as template) -->
+    <!-- AVATAR (exact same as original template) -->
     <div class="text-center mb-12">
-        <img src="<?php echo $avatar_url; ?>" class="w-64 h-64 mx-auto rounded-full border-8 shadow-2xl avatar-float" style="border-color:var(--accent)" alt="">
+        <div id="avatar-container" class="relative inline-block avatar-float">
+            <img id="avatar-img" class="w-64 h-64 rounded-full border-8 shadow-2xl" style="border-color: var(--accent);">
+        </div>
     </div>
 
     <!-- TOP TOTAL STATS -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
         <div class="stat-card rounded-3xl p-8 text-center">
-            <div class="text-6xl font-black italic text-emerald-400"><?php echo array_sum(array_column($filtered_games, 'playing')); ?></div>
+            <div id="total-playing" class="text-6xl font-black italic text-emerald-400">0</div>
             <p class="uppercase text-sm tracking-widest text-emerald-400/80 mt-2">PLAYERS PLAYING MY GAMES</p>
         </div>
         <div class="stat-card rounded-3xl p-8 text-center">
-            <div class="text-6xl font-black italic text-blue-400"><?php echo array_sum(array_column($filtered_games, 'visits')); ?></div>
+            <div id="total-visits" class="text-6xl font-black italic text-blue-400">0</div>
             <p class="uppercase text-sm tracking-widest text-blue-400/80 mt-2">TOTAL VISITS</p>
         </div>
     </div>
@@ -134,22 +81,7 @@ $filtered_games = array_filter($my_games, function($game) use ($manualGameIds) {
             <div class="h-8 w-2" style="background:var(--accent)"></div>
             <h2 class="text-4xl font-black italic uppercase tracking-tighter">MY GAMES</h2>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <?php foreach($filtered_games as $game): ?>
-            <div class="glass rounded-3xl overflow-hidden flex flex-col group">
-                <div class="img-container"><img src="<?php echo $game['thumbnail']; ?>" alt=""></div>
-                <div class="p-8">
-                    <h3 class="text-2xl font-black mb-2"><?php echo $game['name']; ?></h3>
-                    <p class="opacity-70 mb-6"><?php echo $game['description'] ?? 'No description'; ?></p>
-                    <div class="flex justify-between text-xs mb-6">
-                        <div>CCU <span class="font-black text-emerald-400"><?php echo number_format($game['playing'] ?? 0); ?></span></div>
-                        <div>Visits <span class="font-black text-blue-400"><?php echo number_format($game['visits'] ?? 0); ?></span></div>
-                    </div>
-                    <a href="https://www.roblox.com/games/<?php echo $game['placeId']; ?>" target="_blank" class="font-black text-xs uppercase block text-center" style="color:var(--accent)">PLAY →</a>
-                </div>
-            </div>
-            <?php endforeach; ?>
-        </div>
+        <div id="games-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
     </section>
 
     <!-- MY COMMUNITIES -->
@@ -158,25 +90,77 @@ $filtered_games = array_filter($my_games, function($game) use ($manualGameIds) {
             <div class="h-8 w-2" style="background:var(--accent)"></div>
             <h2 class="text-4xl font-black italic uppercase tracking-tighter">MY COMMUNITIES</h2>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <?php foreach($communities as $g): ?>
-            <div class="glass rounded-3xl overflow-hidden flex flex-col group">
-                <div class="img-container">
-                    <img src="https://thumbnails.roproxy.com/v1/groups/icons?groupIds=<?php echo $g['id']; ?>&size=420x420&format=Png" alt="">
-                </div>
-                <div class="p-8">
-                    <h3 class="text-2xl font-black mb-2"><?php echo $g['name']; ?></h3>
-                    <p class="opacity-70 mb-6"><?php echo $g['desc']; ?></p>
-                    <a href="<?php echo $g['link']; ?>" target="_blank" class="font-black text-xs uppercase block text-center" style="color:var(--accent)">JOIN GROUP →</a>
-                </div>
-            </div>
-            <?php endforeach; ?>
-        </div>
+        <div id="groups-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
     </section>
 
 </div>
 
-<footer class="glass py-8 text-center text-xs font-bold">© 2026 KingTim17287 • Template by UN6107617</footer>
+<footer class="glass mt-20 border-t border-white/5 py-10 text-center">
+    <div class="text-xs font-bold">© 2026 KingTim17287 • Template by UN6107617</div>
+</footer>
 
+<script>
+    async function loadData() {
+        const cfg = portfolioConfig;
+        document.documentElement.style.setProperty('--accent', cfg.accentHex);
+        document.getElementById('nav-name').innerText = cfg.name;
+
+        try {
+            const res = await fetch(`https://api.un6107617.dev/portfolio/${cfg.userId}`);
+            const data = await res.json();
+
+            if (!data.success) throw new Error("API failed");
+
+            // Avatar (exact same as original template)
+            document.getElementById('avatar-img').src = data.user.avatar;
+
+            // Filter to ONLY your 8 games
+            const allowed = new Set(cfg.manualGames);
+            const filteredGames = data.games.filter(g => allowed.has(Number(g.placeId)));
+
+            // Render MY GAMES
+            let gamesHTML = filteredGames.map(g => `
+                <div class="glass rounded-3xl overflow-hidden flex flex-col group">
+                    <div class="img-container"><img src="${g.thumbnail}"></div>
+                    <div class="p-8">
+                        <h3 class="text-2xl font-black mb-2">${g.name}</h3>
+                        <p class="opacity-70 mb-6">${g.description || 'No description'}</p>
+                        <div class="flex justify-between text-xs mb-6">
+                            <div>CCU <span class="font-black text-emerald-400">${(g.playing || 0).toLocaleString()}</span></div>
+                            <div>Visits <span class="font-black text-blue-400">${(g.visits || 0).toLocaleString()}</span></div>
+                        </div>
+                        <a href="https://www.roblox.com/games/${g.placeId}" target="_blank" class="font-black text-xs uppercase block text-center" style="color:var(--accent)">PLAY →</a>
+                    </div>
+                </div>`).join('');
+            document.getElementById('games-grid').innerHTML = gamesHTML;
+
+            // Total stats from your games only
+            const totalPlaying = filteredGames.reduce((sum, g) => sum + (g.playing || 0), 0);
+            const totalVisits = filteredGames.reduce((sum, g) => sum + (g.visits || 0), 0);
+            document.getElementById('total-playing').innerText = totalPlaying;
+            document.getElementById('total-visits').innerText = totalVisits;
+
+            // Render MY COMMUNITIES
+            const groupsHTML = cfg.groups.map(g => `
+                <div class="glass rounded-3xl overflow-hidden flex flex-col group">
+                    <div class="img-container">
+                        <img src="https://thumbnails.roproxy.com/v1/groups/icons?groupIds=${g.id}&size=420x420&format=Png" alt="${g.name}">
+                    </div>
+                    <div class="p-8">
+                        <h3 class="text-2xl font-black mb-2">${g.name}</h3>
+                        <p class="opacity-70 mb-6">${g.desc}</p>
+                        <a href="${g.link}" target="_blank" class="font-black text-xs uppercase block text-center" style="color:var(--accent)">JOIN GROUP →</a>
+                    </div>
+                </div>`).join('');
+            document.getElementById('groups-grid').innerHTML = groupsHTML;
+
+        } catch (e) {
+            console.error(e);
+            document.getElementById('games-grid').innerHTML = `<p class="text-red-400 text-center py-12">Could not load — refresh the page.</p>`;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadData);
+</script>
 </body>
 </html>
