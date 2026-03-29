@@ -43,7 +43,7 @@
 
     <!-- AVATAR -->
     <div class="text-center mb-12">
-        <img id="avatar-img" class="w-64 h-64 mx-auto rounded-full border-8 shadow-2xl avatar-float" style="border-color:var(--accent)" alt="Avatar">
+        <img id="avatar-img" class="w-64 h-64 mx-auto rounded-full border-8 shadow-2xl avatar-float" style="border-color:var(--accent)" alt="">
     </div>
 
     <!-- TOTAL STATS -->
@@ -58,17 +58,8 @@
         </div>
     </div>
 
-    <!-- MY COMMUNITIES (separate section) -->
+    <!-- MY GAMES (first, as requested) -->
     <section class="mb-16">
-        <div class="flex items-center gap-3 mb-8">
-            <div class="h-8 w-2" style="background:var(--accent)"></div>
-            <h2 class="text-4xl font-black italic uppercase tracking-tighter">MY COMMUNITIES</h2>
-        </div>
-        <div id="groups-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
-    </section>
-
-    <!-- MY GAMES (separate section) -->
-    <section>
         <div class="flex items-center gap-3 mb-8">
             <div class="h-8 w-2" style="background:var(--accent)"></div>
             <h2 class="text-4xl font-black italic uppercase tracking-tighter">MY GAMES</h2>
@@ -76,83 +67,82 @@
         <div id="games-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
     </section>
 
+    <!-- MY COMMUNITIES -->
+    <section>
+        <div class="flex items-center gap-3 mb-8">
+            <div class="h-8 w-2" style="background:var(--accent)"></div>
+            <h2 class="text-4xl font-black italic uppercase tracking-tighter">MY COMMUNITIES</h2>
+        </div>
+        <div id="groups-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+    </section>
+
 </div>
 
 <footer class="glass py-8 text-center text-xs font-bold">© 2026 KingTim17287 • Template by UN6107617</footer>
 
 <script>
-    async function load() {
-        const cfg = window.cfg;
-
-        // Avatar
-        document.getElementById('avatar-img').src = `https://thumbnails.roproxy.com/v1/users/avatar-headshot?userIds=${cfg.userId}&size=420x420&format=Png&isCircular=true`;
-
-        // Colors
-        document.documentElement.style.setProperty('--accent', cfg.accentHex);
-        document.getElementById('nav-name').innerText = cfg.name;
-
-        // Groups (separate section)
-        const groupsHTML = cfg.groups.map(g => `
-            <div class="glass rounded-3xl overflow-hidden flex flex-col group">
-                <div class="img-container">
-                    <img src="https://thumbnails.roproxy.com/v1/groups/icons?groupIds=${g.id}&size=420x420&format=Png" alt="${g.name}">
-                </div>
-                <div class="p-8">
-                    <h3 class="text-2xl font-black mb-2">${g.name}</h3>
-                    <p class="opacity-70 mb-6">${g.desc}</p>
-                    <a href="${g.link}" target="_blank" class="font-black text-xs uppercase block text-center" style="color:var(--accent)">JOIN GROUP →</a>
-                </div>
-            </div>`).join('');
-        document.getElementById('groups-grid').innerHTML = groupsHTML;
-
-        // Games + stats (only your 8 games)
-        const placeIds = cfg.manualGames.join(',');
+    async function loadPortfolio() {
+        const uid = cfg.userId;
         try {
-            const [detailsRes, thumbsRes, statsRes] = await Promise.all([
-                fetch(`https://games.roproxy.com/v1/games/multiget-place-details?placeIds=${placeIds}`),
-                fetch(`https://thumbnails.roproxy.com/v1/places/icons?placeIds=${placeIds}&size=512x512&format=Png`),
-                fetch(`https://games.roproxy.com/v1/games?universeIds=${(await (await fetch(`https://games.roproxy.com/v1/games/multiget-place-details?placeIds=${placeIds}`)).json()).data.map(p => p.universeId).join(',')}`)
-            ]);
+            const res = await fetch(`https://api.un6107617.dev/portfolio/${uid}`);
+            const data = await res.json();
 
-            const details = await detailsRes.json();
-            const thumbs = await thumbsRes.json();
-            const statsData = await statsRes.json();
+            if (!data.success) throw new Error("API failed");
 
-            let totalPlaying = 0;
-            let totalVisits = 0;
+            // Avatar (exact same as original template)
+            document.getElementById('avatar-img').src = data.user.avatar;
 
-            const gamesHTML = details.data.map(p => {
-                const stat = statsData.data.find(s => s.universeId === p.universeId) || { playing: 0, visits: 0 };
-                const thumb = thumbs.data.find(t => t.targetId === p.placeId) || {};
-                totalPlaying += stat.playing || 0;
-                totalVisits += stat.visits || 0;
+            // Colors
+            document.documentElement.style.setProperty('--accent', cfg.accentHex);
+            document.getElementById('nav-name').innerText = cfg.name;
 
-                return `
+            // Filter to ONLY your 8 games
+            const allowed = new Set(cfg.manualGames);
+            const filteredGames = data.games.filter(g => allowed.has(Number(g.placeId)));
+
+            // Render MY GAMES
+            let gamesHTML = filteredGames.map(g => `
                 <div class="glass rounded-3xl overflow-hidden flex flex-col group">
-                    <div class="img-container"><img src="${thumb.imageUrl}"></div>
+                    <div class="img-container"><img src="${g.thumbnail}" alt="${g.name}"></div>
                     <div class="p-8">
-                        <h3 class="text-2xl font-black mb-2">${p.name}</h3>
-                        <p class="opacity-70 mb-6">${p.description || 'No description'}</p>
+                        <h3 class="text-2xl font-black mb-2">${g.name}</h3>
+                        <p class="opacity-70 mb-6">${g.description || 'No description'}</p>
                         <div class="flex justify-between text-xs mb-6">
-                            <div>CCU <span class="font-black text-emerald-400">${stat.playing.toLocaleString()}</span></div>
-                            <div>Visits <span class="font-black text-blue-400">${stat.visits.toLocaleString()}</span></div>
+                            <div>CCU <span class="font-black text-emerald-400">${(g.playing || 0).toLocaleString()}</span></div>
+                            <div>Visits <span class="font-black text-blue-400">${(g.visits || 0).toLocaleString()}</span></div>
                         </div>
-                        <a href="https://www.roblox.com/games/${p.placeId}" target="_blank" class="font-black text-xs uppercase block text-center" style="color:var(--accent)">PLAY →</a>
+                        <a href="https://www.roblox.com/games/${g.placeId}" target="_blank" class="font-black text-xs uppercase block text-center" style="color:var(--accent)">PLAY →</a>
                     </div>
-                </div>`;
-            }).join('');
-
+                </div>`).join('');
             document.getElementById('games-grid').innerHTML = gamesHTML;
-            document.getElementById('total-playing').innerText = totalPlaying.toLocaleString();
-            document.getElementById('total-visits').innerText = totalVisits.toLocaleString();
+
+            // Total stats from your games only
+            const totalPlaying = filteredGames.reduce((sum, g) => sum + (g.playing || 0), 0);
+            const totalVisits = filteredGames.reduce((sum, g) => sum + (g.visits || 0), 0);
+            document.getElementById('total-playing').innerText = totalPlaying;
+            document.getElementById('total-visits').innerText = totalVisits;
+
+            // Render MY COMMUNITIES (separate, with real group icons)
+            const groupsHTML = cfg.groups.map(g => `
+                <div class="glass rounded-3xl overflow-hidden flex flex-col group">
+                    <div class="img-container">
+                        <img src="https://thumbnails.roproxy.com/v1/groups/icons?groupIds=${g.id}&size=420x420&format=Png" alt="${g.name}">
+                    </div>
+                    <div class="p-8">
+                        <h3 class="text-2xl font-black mb-2">${g.name}</h3>
+                        <p class="opacity-70 mb-6">${g.desc}</p>
+                        <a href="${g.link}" target="_blank" class="font-black text-xs uppercase block text-center" style="color:var(--accent)">JOIN GROUP →</a>
+                    </div>
+                </div>`).join('');
+            document.getElementById('groups-grid').innerHTML = groupsHTML;
 
         } catch (e) {
             console.error(e);
-            document.getElementById('games-grid').innerHTML = `<p class="text-red-400 text-center py-12">Could not load games — refresh page.</p>`;
+            document.getElementById('games-grid').innerHTML = `<p class="text-red-400 text-center py-12">Could not load — please refresh the page.</p>`;
         }
     }
 
-    document.addEventListener('DOMContentLoaded', load);
+    document.addEventListener('DOMContentLoaded', loadPortfolio);
 </script>
 </body>
 </html>
