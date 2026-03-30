@@ -86,6 +86,15 @@
             transition: opacity 0.3s ease;
         }
         .video-card:hover .play-overlay { opacity: 1; }
+
+        /* Mobile Menu */
+        #mobile-menu {
+            animation: slideDown 0.3s ease forwards;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -96,17 +105,39 @@
     <!-- Nav -->
     <nav class="fixed top-0 w-full z-50 py-4 px-6 glass border-b border-white/5">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <!-- Logo -->
             <span class="heading-font text-xl tracking-tighter italic" style="color: var(--accent);">KINGTIM17287</span>
-            <div class="flex gap-6 text-sm font-bold uppercase tracking-widest">
+
+            <!-- Desktop Menu -->
+            <div id="desktop-menu" class="hidden md:flex gap-6 text-sm font-bold uppercase tracking-widest">
                 <a href="#games" class="hover:text-blue-400 transition">My Games</a>
                 <a href="#contributed" class="hover:text-blue-400 transition">Contributions</a>
                 <a href="#groups" class="hover:text-blue-400 transition">Studios</a>
                 <a href="#press" class="hover:text-blue-400 transition">Press</a>
                 <a href="#contact" class="hover:text-blue-400 transition">Contact</a>
             </div>
+
+            <!-- Mobile Hamburger -->
+            <button id="hamburger-btn" class="md:hidden text-3xl text-white focus:outline-none">
+                <svg id="hamburger-icon" xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden mt-4 px-4 py-6 glass rounded-3xl mx-4">
+            <div class="flex flex-col gap-4 text-sm font-bold uppercase tracking-widest text-center">
+                <a href="#games" onclick="toggleMobileMenu()" class="py-3 hover:text-blue-400 transition">My Games</a>
+                <a href="#contributed" onclick="toggleMobileMenu()" class="py-3 hover:text-blue-400 transition">Contributions</a>
+                <a href="#groups" onclick="toggleMobileMenu()" class="py-3 hover:text-blue-400 transition">Studios</a>
+                <a href="#press" onclick="toggleMobileMenu()" class="py-3 hover:text-blue-400 transition">Press</a>
+                <a href="#contact" onclick="toggleMobileMenu()" class="py-3 hover:text-blue-400 transition">Contact</a>
+            </div>
         </div>
     </nav>
 
+    <!-- The rest of your page is unchanged (hero, sections, etc.) -->
     <main class="pt-40 pb-20 px-6 max-w-7xl mx-auto">
         <!-- Hero Section -->
         <div class="flex flex-col items-center text-center mb-24 reveal">
@@ -223,6 +254,20 @@
                 "oPAXjJJtE6A",
             ]
         };
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const icon = document.getElementById('hamburger-icon');
+            menu.classList.toggle('hidden');
+            
+            // Switch between hamburger and X
+            if (menu.classList.contains('hidden')) {
+                icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>`;
+            } else {
+                icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6h12v12"/>`;
+            }
+        }
 
         async function loadPortfolio() {
             const cfg = portfolioConfig;
@@ -406,7 +451,12 @@
         }
 
         // Initialize everything
-        window.addEventListener('load', loadPortfolio);
+        window.addEventListener('load', () => {
+            loadPortfolio();
+            
+            // Hamburger click handler
+            document.getElementById('hamburger-btn').addEventListener('click', toggleMobileMenu);
+        });
     </script>
 </body>
 </html>
