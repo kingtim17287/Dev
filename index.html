@@ -42,7 +42,10 @@
         .game-card:hover img { transform: scale(1.1) rotate(1deg); }
         .game-card:hover { transform: translateY(-4px); }
        
-        .stat-value { text-shadow: 0 0 20px var(--accent-glow); }
+        .stat-value { 
+            text-shadow: 0 0 20px var(--accent-glow); 
+            line-height: 1; 
+        }
        
         @keyframes reveal { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .reveal { animation: reveal 0.8s ease forwards; }
@@ -152,13 +155,13 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-24 reveal" style="animation-delay: 0.2s;">
             <div class="glass p-8 rounded-3xl md:col-span-2 flex flex-col justify-center">
                 <span class="uppercase text-xs tracking-[0.3em] text-blue-400 font-bold mb-2">Network Reach</span>
-                <div id="total-visits" class="stat-value text-5xl md:text-7xl font-bold heading-font tracking-tighter">0</div>
+                <div id="total-visits" class="stat-value text-4xl sm:text-5xl md:text-7xl font-bold heading-font tracking-tighter">—</div>
                 <p class="text-gray-500 mt-2 italic text-sm">Lifetime unique player visits across all titles</p>
                 <p class="text-[10px] text-gray-500/70 mt-1">Stats only include My Games (not contributions)</p>
             </div>
             <div class="glass p-8 rounded-3xl flex flex-col justify-center border-emerald-500/20">
                 <span class="uppercase text-xs tracking-[0.3em] text-emerald-400 font-bold mb-2">Live Now</span>
-                <div id="total-playing" class="stat-value text-5xl md:text-7xl font-bold heading-font tracking-tighter text-emerald-400">0</div>
+                <div id="total-playing" class="stat-value text-4xl sm:text-5xl md:text-7xl font-bold heading-font tracking-tighter text-emerald-400">—</div>
                 <p class="text-gray-500 mt-2 italic text-sm">Concurrent players online</p>
                 <p class="text-[10px] text-gray-500/70 mt-1">Stats only include My Games (not contributions)</p>
             </div>
@@ -450,6 +453,9 @@
 
         // Initialize everything
         window.addEventListener('load', () => {
+            // Force page to start at the very top
+            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+            
             loadPortfolio();
             
             // Hamburger click handler
